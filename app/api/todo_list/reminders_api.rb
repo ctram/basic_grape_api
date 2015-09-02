@@ -9,11 +9,11 @@ module TodoList
         present @reminders, with: TodoList::Entities::Reminder, root: 'reminders'
       end
 
+      # CREATE
       desc 'Create a new reminder'
       params do
         requires :name, type: String
       end
-      # CREATE
       post do
         reminder = Reminder.create!(name: params[:name])
         present reminder, with: TodoList::Entities::Reminder, root: 'reminder'
@@ -58,13 +58,18 @@ module TodoList
           end
 
           # CREATE
+          params do
+            requires :content, type: String
+          end
           desc 'Create a task for the reminder'
           post do
+            # restrict number of tasks to no more than 10 per reminder
+            error!('cannot create more than 10 tasks per  reminder') if @reminder.tasks.count == 10
+
             Task.create!(reminder_id: @reminder.id, content: params[:content], pending: true)
           end
 
           resource ':task_uuid' do
-
             before do
               @task = Task.find_by_uuid(params[:task_uuid])
               error!('task not found', 404) if @task.nil?
@@ -89,27 +94,15 @@ module TodoList
               @task.save
             end
 
-            # # DELETE
-            # desc 'Delete a single reminder task'
-            # delete do
-            #
-            # end
-
+            #  DELETE
+            desc 'Delete a single reminder task'
+            delete do
+              @task.destroy
+            end
           end
-
-
-
         end
       end
     end
-
-    # resource :tasks do
-    #   desc 'Create a new task'
-    #   post do
-    #     @reminder = Reminder.find_by_uuid(params[])
-    #     Task.create!(reminder)
-    #   end
-    # end
   end
 end
 
