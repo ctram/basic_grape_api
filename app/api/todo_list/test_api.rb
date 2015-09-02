@@ -20,6 +20,12 @@ module TodoList
         present(@reminders)
       end
 
+      post '/reminders' do
+        debugger
+        @reminder = Reminder.new(name: params[:name])
+        @reminder.save
+      end
+
 
     end
   end
