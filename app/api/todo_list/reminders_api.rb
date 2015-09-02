@@ -53,7 +53,8 @@ module TodoList
           # INDEX
           desc "List all reminder's tasks"
           get do
-            present(@reminder.tasks, with: TodoList::Entities::Task, root: 'tasks')
+            @tasks = paginate(@reminder.tasks, params[:page])
+            present(@tasks, with: TodoList::Entities::Task, root: 'tasks')
           end
 
           # CREATE
@@ -78,14 +79,22 @@ module TodoList
             # UPDATE
             desc 'Update a single reminder task'
             patch do
-              debugger
-              @reminder
-              params.each do |k, v|
-                next if @task.
-                @task[k] = v
+              @task.attributes.each do |k, v|
+                next if k == 'uuid'
+                if params.has_key?(k)
+                  @task[k] = params[k]
+                end
               end
+
               @task.save
             end
+
+            # # DELETE
+            # desc 'Delete a single reminder task'
+            # delete do
+            #
+            # end
+
           end
 
 
