@@ -8,6 +8,20 @@ module TodoList
       get '/echo' do
         present({ message: params[:message] }, root: 'echo')
       end
+      get '/cats' do
+        debugger
+
+      end
+
+
+      get '/reminders' do
+        @reminders = Reminder.all
+
+        present(@reminders)
+      end
+
+
     end
   end
+
 end
