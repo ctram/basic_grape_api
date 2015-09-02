@@ -13,5 +13,8 @@
 
 class Task < ActiveRecord::Base
   include WithUuid
+
   belongs_to :reminder
+
+  validates_presence_of :pending, :content, :reminder_id
 end

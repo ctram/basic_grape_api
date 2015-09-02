@@ -11,5 +11,8 @@
 
 class Reminder < ActiveRecord::Base
   include WithUuid
+
   has_many :tasks
+
+  validates_presence_of :name
 end

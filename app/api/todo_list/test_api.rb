@@ -1,17 +1,5 @@
 require 'json'
 
-# pagination helper
-def paginate(collection, page_num, per_page=5)
-  num_pages = (collection.count.to_f / per_page).ceil
-  page_num = page_num.to_i
-
-  # fix wonky client requests
-  page_num = 1 if page_num.nil? || page_num <= 0
-  page_num = num_pages if page_num > num_pages
-
-  collection = collection.slice((page_num - 1) * per_page, per_page)
-end
-
 module TodoList
   class TestApi < Grape::API
     resource :test do
@@ -107,5 +95,18 @@ module TodoList
       end
     end
   end
+end
 
+
+# TODO: probably should move this helper method somewhere else.
+# pagination helper
+def paginate(collection, page_num, per_page=5)
+  num_pages = (collection.count.to_f / per_page).ceil
+  page_num = page_num.to_i
+
+  # fix wonky client requests
+  page_num = 1 if page_num.nil? || page_num <= 0
+  page_num = num_pages if page_num > num_pages
+
+  collection.slice((page_num - 1) * per_page, per_page)
 end

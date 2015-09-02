@@ -3,7 +3,7 @@ module TodoList
     version 'v1'
     format :json
     prefix :api
-    mount TestApi
+    # mount TestApi
     mount RemindersApi
   end
 end
