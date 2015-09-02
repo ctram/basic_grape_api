@@ -1,3 +1,5 @@
+require 'json'
+
 module TodoList
   class TestApi < Grape::API
     resource :test do
@@ -8,47 +10,70 @@ module TodoList
       get '/echo' do
         present({ message: params[:message] }, root: 'echo')
       end
-      get '/cats' do
-        debugger
 
-      end
-
-
+## REMINDERS ############################################
+      # INDEX
       get '/reminders' do
         @reminders = Reminder.all
-        present(@reminders)
+        per_page = 10
+        num_pages = (@reminders.count.to_f / per_page).ceil
+        page_num = params[:page]
+        @reminders = @reminders.slice(page_num * per_page)
       end
 
+      # CREATE
       post '/reminders' do
         @reminder = Reminder.new(name: params[:name])
         @reminder.save
       end
 
+      # SHOW reminder
       get '/reminders/:id' do
         @reminder = Reminder.find_by(id: params[:id])
+        if @reminder.nil?
+          return
+        end
         present(@reminder, root: 'reminder')
       end
 
+      patch '/reminders/:id' do
+        @reminder = Reminder.find(params[:id])
+        params.each do |k, v|
+          unless k == params[:id]
+            @reminder[k] = v
+          end
+        end
+      end
+
+      # INDEX of a single reminder's tasks
       get '/reminders/:id/tasks' do
         @reminder = Reminder.find_by(id: params[:id])
         @tasks = @reminder.tasks
         present(@tasks, root: 'tasks')
       end
 
+      # DELETE
+      delete '/reminders/:id' do
+        Reminder.destroy(params[:id])
+        Task.destroy_all(reminder_id: params[:id])
+      end
 
+
+## TASKS #########################################
+      # INDEX
       get '/tasks' do
         @tasks = Task.all
         present(@tasks)
       end
 
+      # CREATE
       post '/tasks' do
-        debugger
         @task = Task.new(content: params[:content], reminder_id: params[:reminder_id], pending: true)
         @task.save
       end
 
+      # UPDATE
       patch '/tasks/:id' do
-        debugger
         @task = Task.find(params[:id])
         params.each do |k, v|
           unless k == :id
@@ -58,8 +83,9 @@ module TodoList
         @task.save
       end
 
+      # DELETE
       delete '/tasks/:id' do
-        Task.delete(params[:id])
+        Task.destroy(params[:id])
       end
 
 
