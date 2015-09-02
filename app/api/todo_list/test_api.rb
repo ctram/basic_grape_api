@@ -1,24 +1,33 @@
 require 'json'
 
+# pagination helper
+def paginate(collection, page_num, per_page=5)
+  num_pages = (collection.count.to_f / per_page).ceil
+  page_num = page_num.to_i
+
+  # fix wonky client requests
+  page_num = 1 if page_num.nil? || page_num <= 0
+  page_num = num_pages if page_num > num_pages
+
+  collection = collection.slice((page_num - 1) * per_page, per_page)
+end
+
 module TodoList
   class TestApi < Grape::API
     resource :test do
-      desc 'Echo service'
-      params do
-        requires :message, type: String
-      end
-      get '/echo' do
-        present({ message: params[:message] }, root: 'echo')
-      end
+      # desc 'Echo service'
+      # params do
+      #   requires :message, type: String
+      # end
+      # get '/echo' do
+      #   present({ message: params[:message] }, root: 'echo')
+      # end
 
 ## REMINDERS ############################################
       # INDEX
       get '/reminders' do
-        @reminders = Reminder.all
-        per_page = 10
-        num_pages = (@reminders.count.to_f / per_page).ceil
-        page_num = params[:page]
-        @reminders = @reminders.slice(page_num * per_page)
+        @reminders = paginate(Reminder.all, params[:page])
+        present(@reminders, root: 'reminders')
       end
 
       # CREATE
@@ -48,7 +57,7 @@ module TodoList
       # INDEX of a single reminder's tasks
       get '/reminders/:id/tasks' do
         @reminder = Reminder.find_by(id: params[:id])
-        @tasks = @reminder.tasks
+        @tasks = paginate(@reminder.tasks, params[:page])
         present(@tasks, root: 'tasks')
       end
 
@@ -62,8 +71,17 @@ module TodoList
 ## TASKS #########################################
       # INDEX
       get '/tasks' do
-        @tasks = Task.all
-        present(@tasks)
+        @tasks = paginate(Task.all, params[:page])
+        present(@tasks, root: 'tasks')
+      end
+
+      # SHOW task
+      get '/tasks/:id' do
+        @task = Task.find(params[:id])
+        if @task.nil?
+          return
+        end
+        present(@task, root: 'task')
       end
 
       # CREATE
@@ -87,8 +105,6 @@ module TodoList
       delete '/tasks/:id' do
         Task.destroy(params[:id])
       end
-
-
     end
   end
 
