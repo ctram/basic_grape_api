@@ -2,14 +2,14 @@ module TodoList
   class RemindersApi < Grape::API
 
     resource :reminders do
-      # INDEX
+      # Reminders - INDEX
       desc 'Get a full list of reminders'
       get do
         @reminders = paginate(Reminder.all, params[:page])
         present @reminders, with: TodoList::Entities::Reminder, root: 'reminders'
       end
 
-      # CREATE
+      # Reminder - CREATE
       desc 'Create a new reminder'
       params do
         requires :name, type: String
@@ -25,13 +25,13 @@ module TodoList
           error!('reminder not found', 404) if @reminder.nil?
         end
 
-        # SHOW
+        # Reminder - SHOW
         desc 'Retrieves a reminder given its uuid'
         get do
           present @reminder, with: TodoList::Entities::Reminder, root: 'reminder'
         end
 
-        # UPDATE
+        # Reminder - UPDATE
         desc 'Upate a reminder given its uuid and updated info'
         patch do
           params.each do |k, v|
@@ -40,30 +40,41 @@ module TodoList
           @reminder.save
         end
 
-        # DELETE
+        # Reminder - DELETE
         desc "Delete a reminder and all it's tasks given its uuid"
         delete do
-          # Task.destroy_all(reminder_id: @reminder.id)
+          Task.destroy_all(reminder_id: @reminder.id)
           @reminder.destroy
         end
 
-        # have 'tasks' resource nested under a given reminder since a task must be associated with a given reminder
+        # 'tasks' resource is nested under a given reminder since a task must be associated with a given reminder and cannot be free floating
         resource :tasks do
 
-          # INDEX
+          # Tasks - INDEX
           desc "List all reminder's tasks"
           get do
-            @tasks = paginate(@reminder.tasks, params[:page])
+            status = params[:status] # Valid statuses: 'done', 'pending', 'all' (default)
+
+            if status == 'pending'
+              filtered_tasks = @reminder.tasks.where(pending: true)
+            elsif status == 'done'
+              filtered_tasks = @reminder.tasks.where(pending: false)
+            else
+              filtered_tasks = @reminder.tasks
+            end
+
+            @tasks = paginate(filtered_tasks, params[:page])
+
             present(@tasks, with: TodoList::Entities::Task, root: 'tasks')
           end
 
-          # CREATE
+          # Task - CREATE
           params do
             requires :content, type: String
           end
           desc 'Create a task for the reminder'
           post do
-            # restrict number of tasks to no more than 10 per reminder
+            # Restrict number of tasks to no more than 10 per reminder
             error!('cannot create more than 10 tasks per  reminder') if @reminder.tasks.count == 10
 
             Task.create!(reminder_id: @reminder.id, content: params[:content], pending: true)
@@ -75,13 +86,13 @@ module TodoList
               error!('task not found', 404) if @task.nil?
             end
 
-            # SHOW
+            # Task - SHOW
             desc "Show a single reminder task"
             get do
               present(@task, with: TodoList::Entities::Task, root: 'task')
             end
 
-            # UPDATE
+            # Task - UPDATE
             desc 'Update a single reminder task'
             patch do
               @task.attributes.each do |k, v|
@@ -94,7 +105,7 @@ module TodoList
               @task.save
             end
 
-            #  DELETE
+            #  Task - DELETE
             desc 'Delete a single reminder task'
             delete do
               @task.destroy
