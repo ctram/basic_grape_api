@@ -14,5 +14,17 @@
 require 'rails_helper'
 
 RSpec.describe Task, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+
+  # Test standard associations
+  it do
+    should belong_to(:reminder).class_name('Reminder')
+  end
+
+  # Test presence of model attributes
+  it do
+    should validate_presence_of(:reminder_id)
+    should validate_presence_of(:content)
+  end
+
+
 end

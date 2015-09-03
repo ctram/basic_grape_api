@@ -1,5 +1,8 @@
 module TodoList
   class RemindersApi < Grape::API
+    # TODO: review that app does not crash with bad inputs
+    # TODO: add testing specs
+    # TODO: Add authorization - must be authorized to write
 
     resource :reminders do
       # Reminders - INDEX
