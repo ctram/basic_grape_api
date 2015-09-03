@@ -22,7 +22,7 @@ gem 'grape-entity', '~> 0.4.8'
 # gem 'capistrano-rails', group: :development
 
 group :development, :test do
-  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
+  # Call 'byebug' anywhere in the code to stop execution and get a  console
   gem 'byebug'
 
   # Access an IRB console on exception pages or by using <%= console %> in views

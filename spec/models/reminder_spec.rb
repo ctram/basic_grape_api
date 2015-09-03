@@ -30,16 +30,18 @@ RSpec.describe Reminder, type: :request do
   let(:tom_list_id) {tom_list.id}
 
   before do
-    Fabricate(:reminder)
-    Fabricate(:reminder)
-    Fabricate(:reminder)
-    Fabricate(:reminder)
+    4.times do
+      Fabricate(:reminder)
+    end
 
-    Fabricate(:task, reminder_id: tom_list_id)
-    Fabricate(:task, reminder_id: tom_list_id)
-    Fabricate(:task, reminder_id: tom_list_id)
-    Fabricate(:task, reminder_id: tom_list_id)
-    Fabricate(:task, reminder_id: tom_list_id)
+    3.times do
+      Fabricate(:task, reminder_id: tom_list_id)
+    end
+
+    2.times do
+      task = Fabricate(:task, reminder_id: tom_list_id)
+      task.update_attribute(:pending, false)
+    end
   end
 
   context 'INDEX' do
@@ -47,6 +49,24 @@ RSpec.describe Reminder, type: :request do
       get '/api/v1/reminders'
       arr_reminders = JSON.parse(response.body)['reminders']
       expect(arr_reminders.count).to eq(5)
+    end
+
+    it 'should have pagination and show no more than 5 reminders' do
+      10.times do
+        Fabricate(:reminder)
+      end
+
+      get '/api/v1/reminders'
+      res = JSON.parse(response.body)
+      expect(res['reminders'].count).to eq(5)
+    end
+  end
+
+  context 'CREATE' do
+    it 'should create a new reminder' do
+      post '/api/v1/reminders?name=NewList'
+      res = JSON.parse(response.body)
+      expect(res['reminder']['name']).to eq('NewList')
     end
   end
 
@@ -73,6 +93,44 @@ RSpec.describe Reminder, type: :request do
         expect(arr_tasks[i]['reminder_id']).to eq(tom_list_id)
       end
     end
+
+    it 'should show only pending tasks' do
+      get '/api/v1/reminders/' + tom_list_uuid + '/tasks?status=pending'
+      arr_tasks = JSON.parse(response.body)['tasks']
+      expect(arr_tasks.count).to eq(3)
+    end
+
+    it 'should show only completed tasks' do
+      get '/api/v1/reminders/' + tom_list_uuid + '/tasks?status=done'
+      arr_tasks = JSON.parse(response.body)['tasks']
+      expect(arr_tasks.count).to eq(2)
+    end
   end
 
+  context 'UPDATE' do
+    it 'should update its name' do
+      patch '/api/v1/reminders/' + tom_list_uuid + "?name=DiffName"
+      get '/api/v1/reminders/' + tom_list_uuid
+      reminder = JSON.parse(response.body)['reminder']
+      expect(reminder['name']).to eq("DiffName")
+    end
+  end
+
+  context 'DELETE' do
+    it 'should successfully delete' do
+      get '/api/v1/reminders'
+      old_count = JSON.parse(response.body)['reminders'].count
+
+      delete '/api/v1/reminders/' + tom_list_uuid
+
+      get '/api/v1/reminders'
+      new_count = JSON.parse(response.body)['reminders'].count
+
+      expect(new_count).to eq(old_count - 1)
+
+      get '/api/v1/reminders/' + tom_list_uuid
+      res = JSON.parse(response.body)
+      expect(res['error']).to eq('reminder not found')
+    end
+  end
 end

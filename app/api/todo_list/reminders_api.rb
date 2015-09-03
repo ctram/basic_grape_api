@@ -8,6 +8,7 @@ module TodoList
       # Reminders - INDEX
       desc 'Get a full list of reminders'
       get do
+
         @reminders = paginate(Reminder.all, params[:page])
         present @reminders, with: TodoList::Entities::Reminder, root: 'reminders'
       end
@@ -99,13 +100,20 @@ module TodoList
             desc 'Update a single reminder task'
             patch do
               @task.attributes.each do |k, v|
+                # debugger
                 next if k == 'uuid'
                 if params.has_key?(k)
-                  @task[k] = params[k]
+                  if k == 'pending'
+                    if params[:pending] == 'true'
+                      @task.update_attribute(k.to_sym, true)
+                    else
+                      @task.update_attribute(k.to_sym, false)
+                    end
+                  else
+                    @task.update_attribute(k.to_sym, params[:content])
+                  end
                 end
               end
-
-              @task.save
             end
 
             #  Task - DELETE
