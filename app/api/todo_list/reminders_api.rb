@@ -1,14 +1,13 @@
 module TodoList
   class RemindersApi < Grape::API
     # TODO: review that app does not crash with bad inputs
-    # TODO: add testing specs
     # TODO: Add authorization - must be authorized to write
 
     resource :reminders do
+
       # Reminders - INDEX
       desc 'Get a full list of reminders'
       get do
-
         @reminders = paginate(Reminder.all, params[:page])
         present @reminders, with: TodoList::Entities::Reminder, root: 'reminders'
       end
@@ -38,10 +37,11 @@ module TodoList
         # Reminder - UPDATE
         desc 'Upate a reminder given its uuid and updated info'
         patch do
-          params.each do |k, v|
-            @reminder[k] = v
+          @reminder.attributes.each do |k, v|
+            if params.has_key?(k)
+              @reminder.update_attribute(k.to_sym, params[k])
+            end
           end
-          @reminder.save
         end
 
         # Reminder - DELETE
@@ -79,7 +79,7 @@ module TodoList
           desc 'Create a task for the reminder'
           post do
             # Restrict number of tasks to no more than 10 per reminder
-            error!('cannot create more than 10 tasks per  reminder') if @reminder.tasks.count == 10
+            error!('cannot create more than 10 tasks per reminder') if @reminder.tasks.count == 10
 
             Task.create!(reminder_id: @reminder.id, content: params[:content], pending: true)
           end
@@ -100,7 +100,6 @@ module TodoList
             desc 'Update a single reminder task'
             patch do
               @task.attributes.each do |k, v|
-                # debugger
                 next if k == 'uuid'
                 if params.has_key?(k)
                   if k == 'pending'
@@ -130,7 +129,7 @@ end
 
 
 # TODO: probably should move this helper method somewhere else.
-# pagination helper
+# Returns array of Active Record objects for a given page number and per-page amount
 def paginate(collection, page_num, per_page=5)
   num_pages = (collection.count.to_f / per_page).ceil
   page_num = page_num.to_i
