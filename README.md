@@ -11,8 +11,12 @@ Basic API endpoint created with Grape, Grape-Entity and Rails.
 
 Routes/resources:
 ```
-/api/v1/reminders (INDEX and CREATE)
-/api/v1/reminders/:uuid (SHOW reminder)
-/api/v1/reminders/:uuid/tasks (INDEX of tasks)
-/api/v1/reminders/:uuid/tasks/:task_uuid (SHOW task)
+/api/v1/reminders (INDEX and CREATE for reminders)
+/api/v1/reminders/:uuid (SHOW, UPDATE, DELETE reminder)
+/api/v1/reminders/:uuid/tasks (INDEX and CREATE for tasks)
+/api/v1/reminders/:uuid/tasks/:task_uuid (SHOW, UPDATE, DELETE task)
 ```
+
+To run:
+
+Clone the repository. Traverse into the ```todolist-api``` directory and run ```rails server```.
